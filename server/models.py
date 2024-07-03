@@ -12,6 +12,20 @@ class Author(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
     # Add validators 
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name:
+            raise ValueError('Name cannot be empty')
+        present = db.session.query(Author.id).filter_by(name = name).first()
+        if present is not None:
+            raise ValueError('Name must be unique')
+        return name
+    
+    @validates('phone_number')
+    def validate_phone_number(self, key, phone_number):
+        if len(phone_number) != 10 or not phone_number.isdigit():
+            raise ValueError('Phone number must be exactly ten digits')
+        return phone_number
 
     def __repr__(self):
         return f'Author(id={self.id}, name={self.name})'
@@ -27,7 +41,34 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    # Add validators  
+    # Add validators
+    @validates('title')
+    def validate_title(self, key, title):
+        if not title:
+            raise ValueError('Title cannot be empty')
+        clickbait = ["Won't Believe", "Secret", "Top", "Guess"]
+        if not any(substring in title for substring in clickbait):
+            raise ValueError("No clickbait found")
+        return title
+      
+    @validates('content')
+    def validate_content(self, key, content):
+        if len(content) < 250:    
+            raise ValueError('Title must be at least 250 characters long')
+        return content   
+
+    @validates('summary')
+    def validate_summary(self, key, summary):
+        if len(summary) > 250:
+            raise ValueError('Summary is too long. Must be at less than 250 characters long')
+        return summary
+    
+    @validates('category')
+    def validate_category(self, key, category):
+        if category != 'Fiction' and category != 'Non-Fiction':
+            raise ValueError('Category must be either Fiction or Non-Fiction')
+        return category
+    
 
 
     def __repr__(self):
